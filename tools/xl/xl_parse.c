@@ -2592,6 +2592,8 @@ skip_usbdev:
                 b_info->u.hvm.vga.kind = LIBXL_VGA_INTERFACE_TYPE_NONE;
             } else if (!strcmp(buf, "qxl")) {
                 b_info->u.hvm.vga.kind = LIBXL_VGA_INTERFACE_TYPE_QXL;
+            } else if (!strcmp(buf, "vmware")) {
+                b_info->u.hvm.vga.kind = LIBXL_VGA_INTERFACE_TYPE_VMWARE;
             } else {
                 fprintf(stderr, "Unknown vga \"%s\" specified\n", buf);
                 exit(1);
