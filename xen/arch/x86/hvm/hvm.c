@@ -68,6 +68,7 @@
 #include <asm/hvm/viridian.h>
 #include <asm/hvm/vm_event.h>
 #include <asm/altp2m.h>
+#include <asm/hvm/vmware.h>
 #include <asm/mtrr.h>
 #include <asm/apic.h>
 #include <asm/vm_event.h>
@@ -4109,6 +4110,13 @@ static int hvm_allow_set_param(struct domain *d,
     {
     /* The following parameters should only be changed once. */
     case HVM_PARAM_VIRIDIAN:
+        /* Disallow if vmware_hwver is in use */
+        if ( d->arch.hvm.vmware_hwver )
+        {
+            rc = -EOPNOTSUPP;
+            break;
+        }
+        /* Fall through */
     case HVM_PARAM_IOREQ_PFN:
     case HVM_PARAM_BUFIOREQ_PFN:
     case HVM_PARAM_IOREQ_SERVER_PFN:

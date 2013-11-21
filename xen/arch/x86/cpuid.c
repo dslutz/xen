@@ -8,6 +8,7 @@
 #include <asm/hvm/nestedhvm.h>
 #include <asm/hvm/svm/svm.h>
 #include <asm/hvm/viridian.h>
+#include <asm/hvm/vmware.h>
 #include <asm/hvm/vmx/vmcs.h>
 #include <asm/paging.h>
 #include <asm/processor.h>
@@ -798,6 +799,9 @@ void guest_cpuid(const struct vcpu *v, uint32_t leaf,
     case 0x40000000 ... 0x400000ff:
         if ( is_viridian_domain(d) )
             return cpuid_viridian_leaves(v, leaf, subleaf, res);
+
+        if ( has_vmware_cpuid(d) )
+            return cpuid_vmware_leaves(v, leaf, subleaf, res);
 
         /*
          * Fallthrough.
