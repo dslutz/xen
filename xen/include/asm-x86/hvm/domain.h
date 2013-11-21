@@ -147,6 +147,9 @@ struct hvm_domain {
 
     uint64_t              *params;
 
+    /* emulated VMware Hardware Version */
+    uint32_t               vmware_hwver;
+
     /* Memory ranges with pinned cache attributes. */
     struct list_head       pinned_cacheattr_ranges;
 

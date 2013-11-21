@@ -764,6 +764,11 @@ int arch_domain_create(struct domain *d,
     }
     d->arch.emulation_flags = emflags;
 
+    if ( is_hvm_domain(d) )
+    {
+        d->arch.hvm.vmware_hwver = config->arch.vmware_hwver;
+    }
+
     HYPERVISOR_COMPAT_VIRT_START(d) =
         is_pv_domain(d) ? __HYPERVISOR_COMPAT_VIRT_START : ~0u;
 

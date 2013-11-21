@@ -474,6 +474,18 @@ static inline bool hvm_get_guest_bndcfgs(struct vcpu *v, u64 *val)
 #define has_viridian_synic(d) \
     (is_viridian_domain(d) && (viridian_feature_mask(d) & HVMPV_synic))
 
+#define vmware_feature_mask(d) \
+    ((d)->arch.hvm.vmware_hwver)
+
+#define is_vmware_domain(d) \
+    (is_hvm_domain(d) && vmware_feature_mask(d))
+
+#define has_vmware_cpuid(d) \
+    (is_hvm_domain(d) && (vmware_feature_mask(d) >= 7))
+
+#define is_viridian_or_vmware_cpuid(d) \
+    (is_viridian_domain(d) || has_vmware_cpuid(d))
+
 static inline void hvm_inject_exception(
     unsigned int vector, unsigned int type,
     unsigned int insn_len, int error_code)
@@ -754,6 +766,9 @@ static inline bool hvm_has_set_descriptor_access_exiting(void)
 #define is_viridian_domain(d) ((void)(d), false)
 #define is_viridian_vcpu(v) ((void)(v), false)
 #define has_viridian_time_ref_count(d) ((void)(d), false)
+#define is_vmware_domain(d) ((void)(d), false)
+#define has_vmware_cpuid(d) ((void)(d), false)
+#define is_viridian_or_vmware_cpuid(d) ((void)(d), false)
 #define hvm_long_mode_active(v) ((void)(v), false)
 #define hvm_get_guest_time(v) ((void)(v), 0)
 

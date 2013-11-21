@@ -1,6 +1,7 @@
 obj-y += svm/
 obj-y += vmx/
 obj-y += viridian/
+obj-y += vmware/
 
 obj-y += asid.o
 obj-y += dm.o
