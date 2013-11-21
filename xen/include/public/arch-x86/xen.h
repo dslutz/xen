@@ -304,6 +304,7 @@ struct xen_arch_domainconfig {
                                      XEN_X86_EMU_PIT | XEN_X86_EMU_USE_PIRQ |\
                                      XEN_X86_EMU_VPCI)
     uint32_t emulation_flags;
+    uint32_t vmware_hwver;
 };
 
 /* Location of online VCPU bitmap. */

@@ -885,8 +885,11 @@ static void do_trap(struct cpu_user_regs *regs)
 int guest_rdmsr_xen(const struct vcpu *v, uint32_t idx, uint64_t *val)
 {
     const struct domain *d = v->domain;
-    /* Optionally shift out of the way of Viridian architectural MSRs. */
-    uint32_t base = is_viridian_domain(d) ? 0x40000200 : 0x40000000;
+    /*
+     * Optionally shift out of the way of Viridian or VMware
+     * architectural leaves.
+     */
+    uint32_t base = is_viridian_or_vmware_cpuid(d) ? 0x40000200 : 0x40000000;
 
     switch ( idx - base )
     {
@@ -901,8 +904,11 @@ int guest_rdmsr_xen(const struct vcpu *v, uint32_t idx, uint64_t *val)
 int guest_wrmsr_xen(struct vcpu *v, uint32_t idx, uint64_t val)
 {
     struct domain *d = v->domain;
-    /* Optionally shift out of the way of Viridian architectural MSRs. */
-    uint32_t base = is_viridian_domain(d) ? 0x40000200 : 0x40000000;
+    /*
+     * Optionally shift out of the way of Viridian or VMware
+     * architectural leaves.
+     */
+    uint32_t base = is_viridian_or_vmware_cpuid(d) ? 0x40000200 : 0x40000000;
 
     switch ( idx - base )
     {
@@ -959,9 +965,10 @@ void cpuid_hypervisor_leaves(const struct vcpu *v, uint32_t leaf,
 {
     const struct domain *d = v->domain;
     const struct cpuid_policy *p = d->arch.cpuid;
-    uint32_t base = is_viridian_domain(d) ? 0x40000100 : 0x40000000;
+    uint32_t base = is_viridian_or_vmware_cpuid(d) ? 0x40000100 : 0x40000000;
     uint32_t idx  = leaf - base;
-    unsigned int limit = is_viridian_domain(d) ? p->hv2_limit : p->hv_limit;
+    unsigned int limit = is_viridian_or_vmware_cpuid(d) ?
+        p->hv2_limit : p->hv_limit;
 
     if ( limit == 0 )
         /* Default number of leaves */
@@ -989,7 +996,7 @@ void cpuid_hypervisor_leaves(const struct vcpu *v, uint32_t leaf,
     case 2:
         res->a = 1;            /* Number of hypercall-transfer pages */
                                /* MSR base address */
-        res->b = is_viridian_domain(d) ? 0x40000200 : 0x40000000;
+        res->b = is_viridian_or_vmware_cpuid(d) ? 0x40000200 : 0x40000000;
         if ( is_pv_domain(d) ) /* Features */
             res->c |= XEN_CPUID_FEAT1_MMU_PT_UPDATE_PRESERVE_AD;
         break;
