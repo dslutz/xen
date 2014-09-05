@@ -17,6 +17,7 @@
 #include <asm/mc146818rtc.h>
 #include <asm/hvm/hvm.h>
 #include <asm/hvm/support.h>
+#include <asm/hvm/trace.h>
 
 #include "backdoor_def.h"
 
@@ -62,6 +63,7 @@ static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
     if ( port == BDOOR_PORT && regs->eax == BDOOR_MAGIC )
     {
         uint32_t new_eax = ~0u;
+        uint16_t cmd = regs->ecx;
         uint64_t value;
         struct vcpu *curr = current;
         struct domain *currd = curr->domain;
@@ -72,7 +74,7 @@ static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
          * leaving the high 32-bits unchanged, unlike what one would
          * expect to happen.
          */
-        switch ( regs->ecx & 0xffff )
+        switch ( cmd )
         {
         case BDOOR_CMD_GETMHZ:
             new_eax = currd->arch.tsc_khz / 1000;
@@ -147,14 +149,22 @@ static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
             break;
 
         default:
+            HVMTRACE_6D(VMPORT_SEND, cmd, regs->ebx, regs->ecx,
+                        regs->edx, regs->esi, regs->edi);
             /* Let backing DM handle */
             return X86EMUL_UNHANDLEABLE;
         }
+        HVMTRACE_7D(VMPORT_HANDLED, cmd, new_eax, regs->ebx, regs->ecx,
+                    regs->edx, regs->esi, regs->edi);
         if ( dir == IOREQ_READ )
             *val = new_eax;
     }
-    else if ( dir == IOREQ_READ )
-        *val = ~0u;
+    else
+    {
+        HVMTRACE_2D(VMPORT_IGNORED, port, regs->eax);
+        if ( dir == IOREQ_READ )
+            *val = ~0u;
+    }
 
     return X86EMUL_OKAY;
 }
