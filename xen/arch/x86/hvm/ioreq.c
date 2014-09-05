@@ -262,6 +262,9 @@ bool handle_hvm_io_completion(struct vcpu *v)
                 regs->edx = vr->edx;
                 regs->esi = vr->esi;
                 regs->edi = vr->edi;
+                HVMTRACE_ND(VMPORT_QEMU, 0, 1/*cycles*/, 6,
+                            vio->io_req.data, regs->ebx, regs->ecx,
+                            regs->edx, regs->esi, regs->edi, 0);
             }
         }
         return handle_pio(vio->io_req.addr, vio->io_req.size,
