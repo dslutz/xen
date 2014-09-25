@@ -790,6 +790,7 @@ static inline bool hvm_has_set_descriptor_access_exiting(void)
 #endif  /* CONFIG_HVM */
 
 void vmport_register(struct domain *d);
+bool_t vmport_check_port(unsigned int port, unsigned int bytes);
 
 #endif /* __ASM_X86_HVM_HVM_H__ */
 

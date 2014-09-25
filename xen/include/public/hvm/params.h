@@ -94,8 +94,8 @@
 #define HVM_PARAM_STORE_EVTCHN 2
 
 #define HVM_PARAM_IOREQ_PFN    5
-
 #define HVM_PARAM_BUFIOREQ_PFN 6
+#define HVM_PARAM_VMPORT_REGS_PFN 7
 
 #if defined(__i386__) || defined(__x86_64__)
 

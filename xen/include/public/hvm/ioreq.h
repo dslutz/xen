@@ -37,6 +37,7 @@
 #define IOREQ_TYPE_PCI_CONFIG   2
 #define IOREQ_TYPE_TIMEOFFSET   7
 #define IOREQ_TYPE_INVALIDATE   8 /* mapcache */
+#define IOREQ_TYPE_VMWARE_PORT  9 /* pio + vmport registers */
 
 /*
  * VMExit dispatcher should cooperate with instruction decoder to
@@ -48,6 +49,8 @@
  *
  * 63....48|47..40|39..35|34..32|31........0
  * SEGMENT |BUS   |DEV   |FN    |OFFSET
+ *
+ * For I/O type IOREQ_TYPE_VMWARE_PORT also use the vmware_regs.
  */
 struct ioreq {
     uint64_t addr;          /* physical address */
@@ -66,10 +69,24 @@ struct ioreq {
 };
 typedef struct ioreq ioreq_t;
 
+struct vmware_regs {
+    uint32_t esi;
+    uint32_t edi;
+    uint32_t ebx;
+    uint32_t ecx;
+    uint32_t edx;
+};
+typedef struct vmware_regs vmware_regs_t;
+
 struct shared_iopage {
     struct ioreq vcpu_ioreq[1];
 };
 typedef struct shared_iopage shared_iopage_t;
+
+struct shared_vmport_iopage {
+    struct vmware_regs vcpu_vmport_regs[1];
+};
+typedef struct shared_vmport_iopage shared_vmport_iopage_t;
 
 struct buf_ioreq {
     uint8_t  type;   /* I/O type                    */

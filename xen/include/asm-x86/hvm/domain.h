@@ -43,7 +43,7 @@ struct hvm_ioreq_vcpu {
     bool             pending;
 };
 
-#define NR_IO_RANGE_TYPES (XEN_DMOP_IO_RANGE_PCI + 1)
+#define NR_IO_RANGE_TYPES (XEN_DMOP_IO_RANGE_VMWARE_PORT + 1)
 #define MAX_NR_IO_RANGES  256
 
 struct hvm_ioreq_server {
@@ -54,6 +54,7 @@ struct hvm_ioreq_server {
 
     struct hvm_ioreq_page  ioreq;
     struct list_head       ioreq_vcpu_list;
+    struct hvm_ioreq_page  vmport_ioreq;
     struct hvm_ioreq_page  bufioreq;
 
     /* Lock to serialize access to buffered ioreq ring */
@@ -62,6 +63,7 @@ struct hvm_ioreq_server {
     struct rangeset        *range[NR_IO_RANGE_TYPES];
     bool                   enabled;
     uint8_t                bufioreq_handling;
+    bool_t                 vmport_enabled;
 };
 
 #ifdef CONFIG_MEM_SHARING

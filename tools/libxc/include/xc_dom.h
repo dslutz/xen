@@ -20,7 +20,7 @@
 #include <xenguest.h>
 
 #define INVALID_PFN ((xen_pfn_t)-1)
-#define X86_HVM_NR_SPECIAL_PAGES    8
+#define X86_HVM_NR_SPECIAL_PAGES    9
 #define X86_HVM_END_SPECIAL_REGION  0xff000u
 #define XG_MAX_MODULES 2
 
