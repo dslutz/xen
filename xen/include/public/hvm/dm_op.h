@@ -60,16 +60,24 @@ typedef uint16_t ioservid_t;
  *                               secondary emulator.
  *
  * The <id> handed back is unique for target domain. The valur of
- * <handle_bufioreq> should be one of HVM_IOREQSRV_BUFIOREQ_* defined in
- * hvm_op.h. If the value is HVM_IOREQSRV_BUFIOREQ_OFF then  the buffered
+ * <flags> should be one of HVM_IOREQSRV_BUFIOREQ_* defined in
+ * hvm_op.h and ored with HVM_IOREQSRV_DISABLE_VMPORT defined below
+ * if not the 1st IOREQ Server that supports VMware port operation.
+ * If the value is HVM_IOREQSRV_BUFIOREQ_OFF then the buffered
  * ioreq ring will not be allocated and hence all emulation requests to
  * this server will be synchronous.
  */
 #define XEN_DMOP_create_ioreq_server 1
 
 struct xen_dm_op_create_ioreq_server {
-    /* IN - should server handle buffered ioreqs */
-    uint8_t handle_bufioreq;
+    /* IN - should server handle buffered ioreqs and/or vmport regs */
+#define HVM_IOREQSRV_BUFIOREQ_MASK   3
+/*
+ * Disable vmport regs mapping.
+ */
+#define HVM_IOREQSRV_DISABLE_VMPORT  4
+#define HVM_IOREQSRV_FLAGS_MASK      7
+    uint8_t flags;
     uint8_t pad[3];
     /* OUT - server id */
     ioservid_t id;
@@ -132,6 +140,9 @@ struct xen_dm_op_get_ioreq_server_info {
  *
  * NOTE: unless an emulation request falls entirely within a range mapped
  * by a secondary emulator, it will not be passed to that emulator.
+ *
+ * NOTE: The 'special' range of [1,1] is what is checked for on
+ * TIMEOFFSET and VMWARE_PORT.
  */
 #define XEN_DMOP_map_io_range_to_ioreq_server 3
 #define XEN_DMOP_unmap_io_range_from_ioreq_server 4
@@ -145,6 +156,8 @@ struct xen_dm_op_ioreq_server_range {
 # define XEN_DMOP_IO_RANGE_PORT   0 /* I/O port range */
 # define XEN_DMOP_IO_RANGE_MEMORY 1 /* MMIO range */
 # define XEN_DMOP_IO_RANGE_PCI    2 /* PCI segment/bus/dev/func range */
+# define XEN_DMOP_IO_RANGE_TIMEOFFSET 7 /* TIMEOFFSET special range */
+# define XEN_DMOP_IO_RANGE_VMWARE_PORT 9 /* VMware port special range */
     /* IN - inclusive start and end of range */
     uint64_aligned_t start, end;
 };

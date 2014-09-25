@@ -1822,6 +1822,8 @@ static int libxl__build_device_model_args_new(libxl__gc *gc,
             }
         }
 
+        if (libxl_defbool_val(c_info->vmware_port))
+            machinearg = GCSPRINTF("%s,vmport=on", machinearg);
         flexarray_append(dm_args, machinearg);
         for (i = 0; b_info->extra_hvm && b_info->extra_hvm[i] != NULL; i++)
             flexarray_append(dm_args, b_info->extra_hvm[i]);

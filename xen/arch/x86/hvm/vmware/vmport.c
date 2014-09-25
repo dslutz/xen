@@ -14,6 +14,7 @@
  */
 
 #include <xen/lib.h>
+#include <asm/mc146818rtc.h>
 #include <asm/hvm/hvm.h>
 #include <asm/hvm/support.h>
 
@@ -22,6 +23,32 @@
 static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
 {
     struct cpu_user_regs *regs = guest_cpu_user_regs();
+
+#define port_overlap(p, n) \
+    ((p + n > BDOOR_PORT) && (p + n <= BDOOR_PORT + 4) ? 1 : \
+    (BDOOR_PORT + 4 > p) && (BDOOR_PORT + 4 <= p + n) ? 1 : 0)
+
+    BUILD_BUG_ON(port_overlap(PIT_BASE, 4));
+    BUILD_BUG_ON(port_overlap(0x61, 1));
+    BUILD_BUG_ON(port_overlap(XEN_HVM_DEBUGCONS_IOPORT, 1));
+    BUILD_BUG_ON(port_overlap(0xcf8, 4));
+/* #define TMR_VAL_ADDR_V0  (ACPI_PM_TMR_BLK_ADDRESS_V0) */
+    BUILD_BUG_ON(port_overlap(ACPI_PM_TMR_BLK_ADDRESS_V0, 4));
+/* #define PM1a_STS_ADDR_V0 (ACPI_PM1A_EVT_BLK_ADDRESS_V0) */
+    BUILD_BUG_ON(port_overlap(ACPI_PM1A_EVT_BLK_ADDRESS_V0, 4));
+    BUILD_BUG_ON(port_overlap(RTC_PORT(0), 2));
+    BUILD_BUG_ON(port_overlap(0x3c4, 2));
+    BUILD_BUG_ON(port_overlap(0x3ce, 2));
+/*
+ * acpi_smi_cmd can not be checked at build time:
+ *   xen/include/asm-x86/acpi.h:extern u32 acpi_smi_cmd;
+ *   xen/arch/x86/acpi/boot.c: acpi_smi_cmd = fadt->smi_command;
+ BUILD_BUG_ON(port_overlap(acpi_smi_cmd, 1));
+*/
+    BUILD_BUG_ON(port_overlap(0x20, 2));
+    BUILD_BUG_ON(port_overlap(0xa0, 2));
+    BUILD_BUG_ON(port_overlap(0x4d0, 1));
+    BUILD_BUG_ON(port_overlap(0x4d1, 1));
 
     /*
      * While VMware expects only 32-bit in, they do support using
@@ -135,6 +162,15 @@ static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
 void vmport_register(struct domain *d)
 {
     register_portio_handler(d, BDOOR_PORT, 4, vmport_ioport);
+}
+
+bool_t vmport_check_port(unsigned int port, unsigned int bytes)
+{
+    struct domain *currd = current->domain;
+
+    return is_hvm_domain(currd) &&
+           currd->arch.hvm.is_vmware_port_enabled &&
+           (port >= BDOOR_PORT) && ((port + bytes) <= (BDOOR_PORT + 4));
 }
 
 /*

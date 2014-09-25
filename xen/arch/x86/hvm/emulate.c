@@ -28,6 +28,8 @@
 #include <asm/iocap.h>
 #include <asm/vm_event.h>
 
+vmware_regs_t *get_vmport_regs_any(struct hvm_ioreq_server *s, struct vcpu *v);
+
 struct hvmemul_cache
 {
     /* The cache is disabled as long as num_ents > max_ents. */
@@ -173,6 +175,8 @@ static int hvmemul_do_io(
     };
     void *p_data = (void *)data;
     int rc;
+    bool_t is_vmware = !is_mmio && !data_is_addr &&
+        vmport_check_port(p.addr, p.size);
 
     /*
      * Weird-sized accesses have undefined behaviour: we discard writes
@@ -189,11 +193,17 @@ static int hvmemul_do_io(
     case STATE_IOREQ_NONE:
         break;
     case STATE_IORESP_READY:
+    {
+        uint8_t calc_type = is_mmio ? IOREQ_TYPE_COPY : IOREQ_TYPE_PIO;
+
+        if ( is_vmware )
+            calc_type = IOREQ_TYPE_VMWARE_PORT;
+
         vio->io_req.state = STATE_IOREQ_NONE;
         p = vio->io_req;
 
         /* Verify the emulation request has been correctly re-issued */
-        if ( (p.type != (is_mmio ? IOREQ_TYPE_COPY : IOREQ_TYPE_PIO)) ||
+        if ( (p.type != calc_type) ||
              (p.addr != addr) ||
              (p.size != size) ||
              (p.count > *reps) ||
@@ -202,7 +212,7 @@ static int hvmemul_do_io(
              (p.data_is_ptr != data_is_addr) ||
              (data_is_addr && (p.data != data)) )
             domain_crash(currd);
-
+    }
         if ( data_is_addr )
             return X86EMUL_UNHANDLEABLE;
 
@@ -320,6 +330,49 @@ static int hvmemul_do_io(
                     break;
                 }
             }
+        }
+
+        if ( unlikely(is_vmware) )
+        {
+            vmware_regs_t *vr;
+
+            BUILD_BUG_ON(sizeof(ioreq_t) < sizeof(vmware_regs_t));
+
+            p.type = vio->io_req.type = IOREQ_TYPE_VMWARE_PORT;
+            s = hvm_select_ioreq_server(currd, &p);
+            vr = get_vmport_regs_any(s, curr);
+
+            /*
+             * If there is no suitable backing DM, just ignore accesses.  If
+             * we do not have access to registers to pass to QEMU, just
+             * ignore access.
+             */
+            if ( !s || !vr )
+            {
+                rc = hvm_process_io_intercept(&null_handler, &p);
+                vio->io_req.state = STATE_IOREQ_NONE;
+            }
+            else
+            {
+                const struct cpu_user_regs *regs = guest_cpu_user_regs();
+
+                p.data = regs->rax;
+                /* The code in QEMU that uses these registers,
+                 * vmport.c and vmmouse.c, only uses the 32bit part
+                 * of the register.  This is how VMware defined the
+                 * use of these registers.
+                 */
+                vr->ebx = regs->ebx;
+                vr->ecx = regs->ecx;
+                vr->edx = regs->edx;
+                vr->esi = regs->esi;
+                vr->edi = regs->edi;
+
+                rc = hvm_send_ioreq(s, &p, 0);
+                if ( rc != X86EMUL_RETRY || currd->is_shutting_down )
+                    vio->io_req.state = STATE_IOREQ_NONE;
+            }
+            break;
         }
 
         if ( !s )
