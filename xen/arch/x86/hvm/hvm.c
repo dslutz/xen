@@ -4122,6 +4122,7 @@ static int hvm_allow_set_param(struct domain *d,
         /* Fall through */
     case HVM_PARAM_IOREQ_PFN:
     case HVM_PARAM_BUFIOREQ_PFN:
+    case HVM_PARAM_VMPORT_REGS_PFN:
     case HVM_PARAM_IOREQ_SERVER_PFN:
     case HVM_PARAM_NR_IOREQ_SERVER_PAGES:
     case HVM_PARAM_ALTP2M:
@@ -4279,9 +4280,12 @@ static int hvm_set_param(struct domain *d, uint32_t index, uint64_t value)
 
     case HVM_PARAM_IOREQ_PFN:
     case HVM_PARAM_BUFIOREQ_PFN:
+    case HVM_PARAM_VMPORT_REGS_PFN:
         BUILD_BUG_ON(HVM_PARAM_IOREQ_PFN >
                      sizeof(d->arch.hvm.ioreq_gfn.legacy_mask) * 8);
         BUILD_BUG_ON(HVM_PARAM_BUFIOREQ_PFN >
+                     sizeof(d->arch.hvm.ioreq_gfn.legacy_mask) * 8);
+        BUILD_BUG_ON(HVM_PARAM_VMPORT_REGS_PFN >
                      sizeof(d->arch.hvm.ioreq_gfn.legacy_mask) * 8);
         if ( value )
             set_bit(index, &d->arch.hvm.ioreq_gfn.legacy_mask);

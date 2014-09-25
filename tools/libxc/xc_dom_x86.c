@@ -67,6 +67,7 @@
 #define SPECIALPAGE_IOREQ    5
 #define SPECIALPAGE_IDENT_PT 6
 #define SPECIALPAGE_CONSOLE  7
+#define SPECIALPAGE_VMPORT_REGS 8
 #define special_pfn(x) \
     (X86_HVM_END_SPECIAL_REGION - X86_HVM_NR_SPECIAL_PAGES + (x))
 
@@ -657,6 +658,8 @@ static int alloc_magic_pages_hvm(struct xc_dom_image *dom)
                      special_pfn(SPECIALPAGE_BUFIOREQ));
     xc_hvm_param_set(xch, domid, HVM_PARAM_IOREQ_PFN,
                      special_pfn(SPECIALPAGE_IOREQ));
+    xc_hvm_param_set(xch, domid, HVM_PARAM_VMPORT_REGS_PFN,
+                     special_pfn(SPECIALPAGE_VMPORT_REGS));
     xc_hvm_param_set(xch, domid, HVM_PARAM_CONSOLE_PFN,
                      special_pfn(SPECIALPAGE_CONSOLE));
     xc_hvm_param_set(xch, domid, HVM_PARAM_PAGING_RING_PFN,

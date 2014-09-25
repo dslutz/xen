@@ -166,7 +166,7 @@ static int xendevicemodel_op(
 }
 
 int xendevicemodel_create_ioreq_server(
-    xendevicemodel_handle *dmod, domid_t domid, int handle_bufioreq,
+    xendevicemodel_handle *dmod, domid_t domid, int flags,
     ioservid_t *id)
 {
     struct xen_dm_op op;
@@ -178,7 +178,7 @@ int xendevicemodel_create_ioreq_server(
     op.op = XEN_DMOP_create_ioreq_server;
     data = &op.u.create_ioreq_server;
 
-    data->handle_bufioreq = handle_bufioreq;
+    data->flags = flags;
 
     rc = xendevicemodel_op(dmod, domid, 1, &op, sizeof(op));
     if (rc)
