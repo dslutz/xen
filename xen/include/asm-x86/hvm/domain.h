@@ -162,6 +162,9 @@ struct hvm_domain {
     spinlock_t             uc_lock;
     bool_t                 is_in_uc_mode;
 
+    /* VMware backdoor port available */
+    bool_t                 is_vmware_port_enabled;
+
     /* hypervisor intercepted msix table */
     struct list_head       msixtbl_list;
 
