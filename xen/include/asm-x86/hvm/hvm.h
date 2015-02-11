@@ -789,6 +789,8 @@ static inline bool hvm_has_set_descriptor_access_exiting(void)
 
 #endif  /* CONFIG_HVM */
 
+void vmport_register(struct domain *d);
+
 #endif /* __ASM_X86_HVM_HVM_H__ */
 
 /*

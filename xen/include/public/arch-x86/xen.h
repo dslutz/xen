@@ -296,6 +296,10 @@ struct xen_arch_domainconfig {
 #define XEN_X86_EMU_USE_PIRQ        (1U<<_XEN_X86_EMU_USE_PIRQ)
 #define _XEN_X86_EMU_VPCI           10
 #define XEN_X86_EMU_VPCI            (1U<<_XEN_X86_EMU_VPCI)
+/* Enable use of vmware backdoor port.
+ * Not part of XEN_X86_EMU_ALL */
+#define _XEN_X86_EMU_VMWARE_PORT    11
+#define XEN_X86_EMU_VMWARE_PORT     (1U<<_XEN_X86_EMU_VMWARE_PORT)
 
 #define XEN_X86_EMU_ALL             (XEN_X86_EMU_LAPIC | XEN_X86_EMU_HPET |  \
                                      XEN_X86_EMU_PM | XEN_X86_EMU_RTC |      \
