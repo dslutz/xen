@@ -671,6 +671,8 @@ int arch_sanitise_domain_config(struct xen_domctl_createdomain *config)
 
 static bool emulation_flags_ok(const struct domain *d, uint32_t emflags)
 {
+    uint32_t all_emflags = emflags & XEN_X86_EMU_ALL;
+
 #ifdef CONFIG_HVM
     /* This doesn't catch !CONFIG_HVM case but it is better than nothing */
     BUILD_BUG_ON(X86_EMU_ALL != XEN_X86_EMU_ALL);
@@ -679,14 +681,15 @@ static bool emulation_flags_ok(const struct domain *d, uint32_t emflags)
     if ( is_hvm_domain(d) )
     {
         if ( is_hardware_domain(d) &&
-             emflags != (X86_EMU_VPCI | X86_EMU_LAPIC | X86_EMU_IOAPIC) )
+             all_emflags != (X86_EMU_VPCI | X86_EMU_LAPIC | X86_EMU_IOAPIC) )
             return false;
         if ( !is_hardware_domain(d) &&
-             emflags != (X86_EMU_ALL & ~X86_EMU_VPCI) &&
-             emflags != X86_EMU_LAPIC )
+             all_emflags != (X86_EMU_ALL & ~X86_EMU_VPCI) &&
+             all_emflags != X86_EMU_LAPIC )
             return false;
     }
-    else if ( emflags != 0 && emflags != X86_EMU_PIT )
+    else if ( emflags & XEN_X86_EMU_VMWARE_PORT ||
+              (all_emflags != 0 && all_emflags != X86_EMU_PIT) )
     {
         /* PV or classic PVH. */
         return false;
@@ -748,7 +751,7 @@ int arch_domain_create(struct domain *d,
     if ( is_hardware_domain(d) && is_pv_domain(d) )
         emflags |= XEN_X86_EMU_PIT;
 
-    if ( emflags & ~XEN_X86_EMU_ALL )
+    if ( emflags & ~(XEN_X86_EMU_ALL | XEN_X86_EMU_VMWARE_PORT) )
     {
         printk(XENLOG_G_ERR "d%d: Invalid emulation bitmap: %#x\n",
                d->domain_id, emflags);
@@ -767,6 +770,8 @@ int arch_domain_create(struct domain *d,
     if ( is_hvm_domain(d) )
     {
         d->arch.hvm.vmware_hwver = config->arch.vmware_hwver;
+        d->arch.hvm.is_vmware_port_enabled =
+            !!(emflags & XEN_X86_EMU_VMWARE_PORT);
     }
 
 #ifdef CONFIG_PV32

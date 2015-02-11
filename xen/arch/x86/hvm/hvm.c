@@ -697,6 +697,9 @@ int hvm_domain_initialise(struct domain *d)
     if ( hvm_tsc_scaling_supported )
         d->arch.hvm.tsc_scaling_ratio = hvm_default_tsc_scaling_ratio;
 
+    if ( d->arch.hvm.is_vmware_port_enabled )
+        vmport_register(d);
+
     rc = viridian_domain_init(d);
     if ( rc )
         goto fail2;
@@ -4214,6 +4217,12 @@ static int hvm_set_param(struct domain *d, uint32_t index, uint64_t value)
         rc = xsm_hvm_param_nested(XSM_PRIV, d);
         if ( rc )
             break;
+        /* Prevent nestedhvm enable with vmport */
+        if ( value && d->arch.hvm.is_vmware_port_enabled )
+        {
+            rc = -EOPNOTSUPP;
+            break;
+        }
         if ( value > 1 )
             rc = -EINVAL;
         /*
