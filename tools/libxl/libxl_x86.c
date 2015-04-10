@@ -21,8 +21,7 @@ int libxl__arch_domain_prepare_config(libxl__gc *gc,
         abort();
     }
 
-    /* Note: will be changed in next patch (tools: Add ...). */
-    config->arch.vmware_hwver = 0;
+    config->arch.vmware_hwver = d_config->c_info.vmware_hwver;
     return 0;
 }
 
