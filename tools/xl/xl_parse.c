@@ -1575,6 +1575,9 @@ void parse_config_data(const char *config_source,
     b_info->cmdline = parse_cmdline(config);
 
     xlu_cfg_get_defbool(config, "driver_domain", &c_info->driver_domain, 0);
+    if (!xlu_cfg_get_long(config, "vmware_hwver",  &l, 1))
+        c_info->vmware_hwver = l;
+
     xlu_cfg_get_defbool(config, "acpi", &b_info->acpi, 0);
 
     xlu_cfg_replace_string (config, "bootloader", &b_info->bootloader, 0);
