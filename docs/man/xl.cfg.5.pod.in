@@ -2353,6 +2353,23 @@ The viridian option can be specified as a boolean. A value of true (1)
 is equivalent to the list [ "defaults" ], and a value of false (0) is
 equivalent to an empty list.
 
+=item B<vmware_hwver=NUMBER>
+
+Turns on or off the exposure of VMware cpuid.  The number is
+VMware's hardware version number, where 0 is off.  A number >= 7
+is needed to enable exposure of VMware cpuid.
+
+The hardware version number (vmware_hwver) comes from VMware config files.
+
+=over 4
+
+In a .vmx it is virtualHW.version
+
+In a .ovf it is part of the value of vssd:VirtualSystemType.
+For vssd:VirtualSystemType == vmx-07, vmware_hwver = 7.
+
+=back
+
 =back
 
 =head3 Emulated VGA Graphics Device
