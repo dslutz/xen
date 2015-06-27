@@ -2359,6 +2359,8 @@ Turns on or off the exposure of VMware cpuid.  The number is
 VMware's hardware version number, where 0 is off.  A number >= 7
 is needed to enable exposure of VMware cpuid.
 
+If not zero it changes the default for vmware_port to on.
+
 The hardware version number (vmware_hwver) comes from VMware config files.
 
 =over 4
@@ -2369,6 +2371,19 @@ In a .ovf it is part of the value of vssd:VirtualSystemType.
 For vssd:VirtualSystemType == vmx-07, vmware_hwver = 7.
 
 =back
+
+=item B<vmware_port=BOOLEAN>
+
+Turns on or off the exposure of VMware port.  This is known as
+vmport in QEMU.  Also called VMware Backdoor I/O Port.  Not all
+defined VMware backdoor commands are implemented.  All of the
+ones that Linux kernel uses are defined.
+
+Defaults to enabled if vmware_hwver is non-zero (i.e. enabled)
+otherwise defaults to disabled.
+
+Note: vmware_port and nestedhvm cannot be specified at the
+same time.
 
 =back
 

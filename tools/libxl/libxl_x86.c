@@ -22,6 +22,8 @@ int libxl__arch_domain_prepare_config(libxl__gc *gc,
     }
 
     config->arch.vmware_hwver = d_config->c_info.vmware_hwver;
+    if (libxl_defbool_val(d_config->c_info.vmware_port))
+        config->arch.emulation_flags |= XEN_X86_EMU_VMWARE_PORT;
     return 0;
 }
 
