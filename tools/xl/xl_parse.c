@@ -1323,6 +1323,7 @@ void parse_config_data(const char *config_source,
     }
 
     xlu_cfg_get_defbool(config, "oos", &c_info->oos, 0);
+    xlu_cfg_get_defbool(config, "vmware_port", &c_info->vmware_port, 0);
 
     if (!xlu_cfg_get_string (config, "pool", &buf, 0))
         xlu_cfg_replace_string(config, "pool", &c_info->pool_name, 0);

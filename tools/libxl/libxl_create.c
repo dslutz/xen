@@ -51,6 +51,7 @@ int libxl__domain_create_info_setdefault(libxl__gc *gc,
         libxl_defbool_setdefault(&c_info->oos, true);
     }
 
+    libxl_defbool_setdefault(&c_info->vmware_port, c_info->vmware_hwver != 0);
     libxl_defbool_setdefault(&c_info->run_hotplug_scripts, true);
     libxl_defbool_setdefault(&c_info->driver_domain, false);
 
@@ -1182,6 +1183,15 @@ int libxl__domain_config_setdefault(libxl__gc *gc,
     ret = libxl__domain_build_info_setdefault(gc, &d_config->b_info);
     if (ret) {
         LOGD(ERROR, domid, "Unable to set domain build info defaults");
+        goto error_out;
+    }
+
+    if (d_config->c_info.type == LIBXL_DOMAIN_TYPE_HVM &&
+        libxl_defbool_val(d_config->b_info.nested_hvm) &&
+        libxl_defbool_val(d_config->c_info.vmware_port)) {
+        ret = ERROR_INVAL;
+        LOGD(ERROR, domid,
+            "vmware_port and nestedhvm cannot be enabled simultaneously\n");
         goto error_out;
     }
 
