@@ -637,6 +637,10 @@ x.Passthrough = Passthrough(xc.passthrough)
 if err := x.XendSuspendEvtchnCompat.fromC(&xc.xend_suspend_evtchn_compat);err != nil {
 return fmt.Errorf("converting field XendSuspendEvtchnCompat: %v", err)
 }
+x.VmwareHwver = uint32(xc.vmware_hwver)
+if err := x.VmwarePort.fromC(&xc.vmware_port);err != nil {
+return fmt.Errorf("converting field VmwarePort: %v", err)
+}
 
  return nil}
 
@@ -679,6 +683,10 @@ return fmt.Errorf("converting field DriverDomain: %v", err)
 xc.passthrough = C.libxl_passthrough(x.Passthrough)
 if err := x.XendSuspendEvtchnCompat.toC(&xc.xend_suspend_evtchn_compat); err != nil {
 return fmt.Errorf("converting field XendSuspendEvtchnCompat: %v", err)
+}
+xc.vmware_hwver = C.uint32_t(x.VmwareHwver)
+if err := x.VmwarePort.toC(&xc.vmware_port); err != nil {
+return fmt.Errorf("converting field VmwarePort: %v", err)
 }
 
  return nil

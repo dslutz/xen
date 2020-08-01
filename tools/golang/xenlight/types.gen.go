@@ -193,6 +193,7 @@ VgaInterfaceTypeCirrus VgaInterfaceType = 1
 VgaInterfaceTypeStd VgaInterfaceType = 2
 VgaInterfaceTypeNone VgaInterfaceType = 3
 VgaInterfaceTypeQxl VgaInterfaceType = 4
+VgaInterfaceTypeVmware VgaInterfaceType = 5
 )
 
 type VendorDevice int
@@ -388,6 +389,8 @@ RunHotplugScripts Defbool
 DriverDomain Defbool
 Passthrough Passthrough
 XendSuspendEvtchnCompat Defbool
+VmwareHwver uint32
+VmwarePort Defbool
 }
 
 type DomainRestoreParams struct {
