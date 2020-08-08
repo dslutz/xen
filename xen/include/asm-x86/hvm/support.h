@@ -39,6 +39,7 @@
 #define DBG_LEVEL_IOAPIC            (1 << 9)
 #define DBG_LEVEL_HCALL             (1 << 10)
 #define DBG_LEVEL_MSR               (1 << 11)
+#define DBG_LEVEL_PARAM             (1 << 12)
 
 extern unsigned int opt_hvm_debug_level;
 #define HVM_DBG_LOG(level, _f, _a...)                                         \
