@@ -4343,7 +4343,7 @@ static int hvm_set_param(struct domain *d, uint32_t index, uint64_t value)
     {
         d->arch.hvm.params[index] = value;
 
-        HVM_DBG_LOG(DBG_LEVEL_HCALL, "set param %u = %"PRIx64,
+        HVM_DBG_LOG(DBG_LEVEL_PARAM, "set param %u = %"PRIx64,
                     index, value);
     }
 
@@ -4484,7 +4484,7 @@ static int hvmop_get_param(
     {
         rc = __copy_to_guest(arg, &a, 1) ? -EFAULT : 0;
 
-        HVM_DBG_LOG(DBG_LEVEL_HCALL, "get param %u = %"PRIx64,
+        HVM_DBG_LOG(DBG_LEVEL_PARAM, "get param %u = %"PRIx64,
                     a.index, a.value);
     }
 
