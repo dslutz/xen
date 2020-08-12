@@ -14,12 +14,18 @@
  */
 
 #include <xen/lib.h>
-#include <asm/mc146818rtc.h>
 #include <asm/hvm/hvm.h>
 #include <asm/hvm/support.h>
 #include <asm/hvm/trace.h>
+#include <asm/mc146818rtc.h>
+#include <public/hvm/params.h>
 
 #include "backdoor_def.h"
+
+#ifndef NDEBUG
+/* xtest -- debug only */
+#define VMWARE_PORT_CMD_XTEST             22
+#endif
 
 static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
 {
@@ -147,6 +153,23 @@ static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
             /* maxTimeLag */
             regs->ecx = 1000000;
             break;
+
+#ifndef NDEBUG
+        case VMWARE_PORT_CMD_XTEST:
+            if (!(currd->arch.hvm.params[HVM_PARAM_VMPORT_DEBUG] &
+                  HVM_PARAM_VMPORT_DEBUG_FLAG_XTEST_MASK))
+            {
+                value = domain_tot_pages(currd);
+                new_eax = value >> 8;
+                regs->edx = (value << 12) & ((1 << 20) - 1);
+                regs->ecx = regs->ebx;
+                regs->ebx = BDOOR_MAGIC;
+                regs->esi = regs->edi;
+                regs->edi = currd->max_pages;
+                break;
+            }
+            /* fall through */
+#endif
 
         default:
             HVMTRACE_6D(VMPORT_SEND, cmd, regs->ebx, regs->ecx,
