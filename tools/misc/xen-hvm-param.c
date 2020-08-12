@@ -75,6 +75,9 @@ main(int argc, char **argv)
              sizeof(hvm_param_name[HVM_PARAM_STORE_PFN]), "store_pfn");
     snprintf(hvm_param_name[HVM_PARAM_STORE_EVTCHN],
              sizeof(hvm_param_name[HVM_PARAM_STORE_EVTCHN]), "store_evtchn");
+    snprintf(hvm_param_name[HVM_PARAM_VMPORT_DEBUG],
+             sizeof(hvm_param_name[HVM_PARAM_VMPORT_DEBUG]),
+             "vmport_debug");
     snprintf(hvm_param_name[HVM_PARAM_IOREQ_PFN],
              sizeof(hvm_param_name[HVM_PARAM_IOREQ_PFN]), "ioreq_pfn");
     snprintf(hvm_param_name[HVM_PARAM_BUFIOREQ_PFN],

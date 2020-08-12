@@ -332,6 +332,12 @@ static void dump_domains(unsigned char key)
         }
     }
 
+    if (alt_key_handling)
+    {
+        rcu_read_unlock(&domlist_read_lock);
+        return;
+    }
+
     for_each_domain ( d )
     {
         for_each_vcpu ( d, v )
