@@ -14,6 +14,7 @@
  */
 
 #include <xen/lib.h>
+#include <xen/keyhandler.h>
 #include <asm/hvm/hvm.h>
 #include <asm/hvm/support.h>
 #include <asm/hvm/trace.h>
@@ -192,9 +193,36 @@ static int vmport_ioport(int dir, uint32_t port, uint32_t bytes, uint32_t *val)
     return X86EMUL_OKAY;
 }
 
+static void vmport_dump(unsigned char ch)
+{
+    struct domain *d;
+    
+    printk("*********** VMPORT **************\n");
+
+    rcu_read_lock(&domlist_read_lock);
+
+    for_each_domain ( d )
+    {
+        if ( !is_hvm_domain(d) )
+            continue;
+
+        portio_handler_printk(d);
+    }
+
+    rcu_read_unlock(&domlist_read_lock);
+
+    printk("**************************************\n");
+}
+
+static bool have_key = false;
 void vmport_register(struct domain *d)
 {
     register_portio_handler(d, BDOOR_PORT, 4, vmport_ioport);
+    if ( !have_key )
+    {
+        register_keyhandler('V', vmport_dump, "dump portio handler", 1);
+        have_key = true;
+    }
 }
 
 bool_t vmport_check_port(unsigned int port, unsigned int bytes)

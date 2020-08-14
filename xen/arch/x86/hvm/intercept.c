@@ -353,6 +353,25 @@ bool_t hvm_mmio_internal(paddr_t gpa)
     return 1;
 }
 
+void portio_handler_printk(struct domain *d)
+{
+    unsigned int i;
+
+    printk("portio_handler belonging to domain %u:\n", d->domain_id);
+
+    for ( i = 0; i < d->arch.hvm.io_handler_count; i++ )
+    {
+        struct hvm_io_handler *handler =
+            &d->arch.hvm.io_handler[i];
+
+        if ( handler->type != IOREQ_TYPE_PIO )
+            continue;
+
+        printk("    port=%x size=%u\n", handler->portio.port,
+               handler->portio.size);
+    }
+}
+
 /*
  * Local variables:
  * mode: C
