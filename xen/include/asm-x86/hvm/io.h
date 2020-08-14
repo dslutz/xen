@@ -112,6 +112,8 @@ bool relocate_portio_handler(
     struct domain *d, unsigned int old_port, unsigned int new_port,
     unsigned int size);
 
+void portio_handler_printk(struct domain *d);
+
 void send_timeoffset_req(unsigned long timeoff);
 void send_invalidate_req(void);
 bool handle_mmio_with_translation(unsigned long gla, unsigned long gpfn,
