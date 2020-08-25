@@ -5330,6 +5330,16 @@ x86_emulate(
                 goto complete_insn;
             goto done;
         }
+        /*
+         * vmport can causes more registers to change, so allow this.
+         * Note: this does not need to be conditional since other
+         * code does not change these.
+         */
+        _regs.ebx = ctxt->regs->ebx;
+        _regs.ecx = ctxt->regs->ecx;
+        _regs.edx = ctxt->regs->edx;
+        _regs.esi = ctxt->regs->esi;
+        _regs.edi = ctxt->regs->edi;
         break;
     }
 
