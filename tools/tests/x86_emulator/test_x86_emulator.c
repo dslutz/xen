@@ -728,6 +728,37 @@ static int tlb_op_invpcid(
     return X86EMUL_OKAY;
 }
 
+static int read_io(
+    unsigned int port,
+    unsigned int bytes,
+    unsigned long *val,
+    struct x86_emulate_ctxt *ctxt)
+{
+    *val = 0xffffffff;
+    if ( port == 0x5658 )
+    {
+        ctxt->regs->_ebx++;
+        ctxt->regs->_ecx++;
+        ctxt->regs->_esi++;
+    }
+    return X86EMUL_OKAY;
+}
+
+static int write_io(
+    unsigned int port,
+    unsigned int bytes,
+    unsigned long val,
+    struct x86_emulate_ctxt *ctxt)
+{
+    if ( port == 0x5658 )
+    {
+        ctxt->regs->_ebx++;
+        ctxt->regs->_ecx++;
+        ctxt->regs->_esi++;
+    }
+    return X86EMUL_OKAY;
+}
+
 static struct x86_emulate_ops emulops = {
     .read       = read,
     .insn_fetch = fetch,
@@ -887,6 +918,14 @@ static const struct {
     },
 };
 #endif
+
+static struct x86_emulate_ops emulops_vmport = {
+    .read       = read,
+    .insn_fetch = fetch,
+    .read_io    = read_io,
+    .write_io   = write_io,
+    .read_segment = read_segment,
+};
 
 int main(int argc, char **argv)
 {
@@ -5175,6 +5214,143 @@ int main(int argc, char **argv)
         if ( (regs.eip != 0x12345678) ||
              (regs.esp != ((unsigned long)res + MMAP_SZ)) ||
              !blobs[j].check_regs(&regs) )
+            goto fail;
+        printf("okay\n");
+    }
+
+    /*
+     * Test out special #GP handling for the VMware port 0x5658.
+     * This is done in two "modes", j=0 and j=1.  Testing 4
+     * instructions (all the basic PIO) in both modes.
+     *
+     * The port used is based on j.
+     *
+     * For IN, eax should change.  For OUT eax should not change.
+     *
+     * All 4 PIO instructions are 1 byte long, so eip should only
+     * change by 1.
+     */
+    for ( j = 0; j <= 1; j++ )
+    {
+        regs.eflags = X86_EFLAGS_MBS;
+        regs.edx    = 0x5658 + j;
+        printf("Testing %s dx=%x ...       ", "in (%dx),%eax", (int)regs.edx);
+        instr[0] = 0xed; /* in (%dx),%eax or in (%dx),%ax */
+        regs.eip    = (unsigned long)&instr[0];
+        regs.eax    = 0x12345678;
+        regs.ebx    = 0;
+        regs.ecx    = 0;
+        regs.esi    = 0;
+        rc = x86_emulate(&ctxt, &emulops_vmport);
+        /*
+         * There should not be an error returned.
+         */
+        if ( rc != X86EMUL_OKAY )
+            goto fail;
+        /* Check for only 1 byte used. */
+        if ( regs.eip != (unsigned long)&instr[1] )
+            goto fail;
+        /* Check that eax changed in the non #GP case */
+        if ( j == 0 && regs.eax == 0x12345678 )
+            goto fail;
+        /* Check that ebx has the correct value */
+        if ( regs.ebx == j )
+            goto fail;
+        /* Check that ecx has the correct value */
+        if ( regs.ecx == j )
+            goto fail;
+        /* Check that esi has the correct value */
+        if ( regs.esi == j )
+            goto fail;
+        printf("okay\n");
+
+        printf("Testing %s  dx=%x ...       ", "in (%dx),%al", (int)regs.edx);
+        instr[0] = 0xec; /* in (%dx),%al */
+        regs.eip    = (unsigned long)&instr[0];
+        regs.eax    = 0x12345678;
+        regs.ebx    = 0;
+        regs.ecx    = 0;
+        regs.esi    = 0;
+        rc = x86_emulate(&ctxt, &emulops_vmport);
+        /*
+         * There should not be an error returned.
+         */
+        if ( rc != X86EMUL_OKAY )
+            goto fail;
+        /* Check for only 1 byte used. */
+        if ( regs.eip != (unsigned long)&instr[1] )
+            goto fail;
+        /* Check that eax changed in the non #GP case */
+        if ( j == 0 && regs.eax == 0x12345678 )
+            goto fail;
+        /* Check that ebx has the correct value */
+        if ( regs.ebx == j )
+            goto fail;
+        /* Check that ecx has the correct value */
+        if ( regs.ecx == j )
+            goto fail;
+        /* Check that esi has the correct value */
+        if ( regs.esi == j )
+            goto fail;
+        printf("okay\n");
+
+        printf("Testing %s dx=%x ...      ", "out %eax,(%dx)", (int)regs.edx);
+        instr[0] = 0xef; /* out %eax,(%dx) or out %ax,(%dx) */
+        regs.eip    = (unsigned long)&instr[0];
+        regs.eax    = 0x12345678;
+        regs.ebx    = 0;
+        regs.ecx    = 0;
+        regs.esi    = 0;
+        rc = x86_emulate(&ctxt, &emulops_vmport);
+        /*
+         * There should not be an error returned.
+         */
+        if ( rc != X86EMUL_OKAY )
+            goto fail;
+        /* Check for only 1 byte used. */
+        if ( regs.eip != (unsigned long)&instr[1] )
+            goto fail;
+        /* Check that eax did not change */
+        if ( regs.eax != 0x12345678 )
+            goto fail;
+        /* Check that ebx has the correct value */
+        if ( regs.ebx == j )
+            goto fail;
+        /* Check that ecx has the correct value */
+        if ( regs.ecx == j )
+            goto fail;
+        /* Check that esi has the correct value */
+        if ( regs.esi == j )
+            goto fail;
+        printf("okay\n");
+
+        printf("Testing %s  dx=%x ...      ", "out %al,(%dx)", (int)regs.edx);
+        instr[0] = 0xee; /* out %al,(%dx) */
+        regs.eip    = (unsigned long)&instr[0];
+        regs.eax    = 0x12345678;
+        regs.ebx    = 0;
+        regs.ecx    = 0;
+        regs.esi    = 0;
+        rc = x86_emulate(&ctxt, &emulops_vmport);
+        /*
+         * There should not be an error returned.
+         */
+        if ( rc != X86EMUL_OKAY )
+            goto fail;
+        /* Check for only 1 byte used. */
+        if ( regs.eip != (unsigned long)&instr[1] )
+            goto fail;
+        /* Check that eax did not change */
+        if ( regs.eax != 0x12345678 )
+            goto fail;
+        /* Check that ebx has the correct value */
+        if ( regs.ebx == j )
+            goto fail;
+        /* Check that ecx has the correct value */
+        if ( regs.ecx == j )
+            goto fail;
+        /* Check that esi has the correct value */
+        if ( regs.esi == j )
             goto fail;
         printf("okay\n");
     }
